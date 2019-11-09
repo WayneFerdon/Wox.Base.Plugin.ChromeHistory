@@ -7,7 +7,7 @@ import shutil
 import re
 import webbrowser
 import win32con
-import win32clipboard as wincld
+import win32clipboard
 import time
 import datetime
 
@@ -38,7 +38,7 @@ def getTimeFromHistoryList(historyList):
 class getHistory(Wox):
     # path to user's history database (Chrome)
     # and copy a read-only copy
-    dataPath = r'C:\Users\WayneFerdon\AppData\Local\Google\Chrome\User Data\Default'
+    dataPath = os.environ['LOCALAPPDATA'] + r'\Google\Chrome\User Data\Default'
     shutil.copyfile(os.path.join(dataPath, 'History'), os.path.join(dataPath, 'History_2'))
     files = os.listdir(dataPath)
 
@@ -142,10 +142,10 @@ class getHistory(Wox):
         webbrowser.open(url)
 
     def copyData(self, data):
-        wincld.OpenClipboard()
-        wincld.EmptyClipboard()
-        wincld.SetClipboardData(win32con.CF_UNICODETEXT, data)
-        wincld.CloseClipboard()
+        win32clipboard.OpenClipboard()
+        win32clipboard.EmptyClipboard()
+        win32clipboard.SetClipboardData(win32con.CF_UNICODETEXT, data)
+        win32clipboard.CloseClipboard()
 
 
 if __name__ == '__main__':
