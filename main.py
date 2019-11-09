@@ -15,19 +15,19 @@ import datetime
 def stamp2time(timeStamp):
     baseDate = datetime.datetime(1601, 1, 1)
     yearSecond = timeStamp / 1000000
-    us = timeStamp % 1000
-    ms = (timeStamp % 1000000 - us) // 1000
+    microSecond = timeStamp % 1000
+    milliSecond = (timeStamp % 1000000 - microSecond) // 1000
     trueYearSecond = baseDate + datetime.timedelta(seconds=yearSecond, hours=8)
     toSecond = time.strftime('%Y-%m-%d %H:%M:%S', datetime.datetime.timetuple(trueYearSecond))
-    tomSecond = toSecond + '.' + str(ms).zfill(3)
-    touSecond = tomSecond + ' ' + str(us).zfill(3)
+    toMilliSecond = toSecond + '.' + str(milliSecond).zfill(3)
+    toMicroSecond = toMilliSecond + ' ' + str(microSecond).zfill(3)
     return {
         'toSecond': toSecond,
-        'tomSecond': tomSecond,
-        'touSecond': touSecond,
+        'toMilliSecond': toMilliSecond,
+        'toMicroSecond': toMicroSecond,
         'trueYearSecond': trueYearSecond,
-        'us': us,
-        'ms': ms
+        'microSecond': microSecond,
+        'milliSecond': milliSecond
     }
 
 
@@ -38,16 +38,16 @@ def getTimeFromHistoryList(historyList):
 class getHistory(Wox):
     # path to user's history database (Chrome)
     # and copy a read-only copy
-    dataPath = os.environ['LOCALAPPDATA'] + r'\Google\Chrome\User Data\Default'
-    shutil.copyfile(os.path.join(dataPath, 'History'), os.path.join(dataPath, 'History_2'))
+    dataPath = os.environ['localAppData'.upper()] + '/Google/Chrome/User Data/Default'
+    shutil.copyfile(os.path.join(dataPath, 'History'), os.path.join(dataPath, 'HistoryToRead'))
     files = os.listdir(dataPath)
 
-    historyDb = os.path.join(dataPath, 'History_2')
+    historyDb = os.path.join(dataPath, 'HistoryToRead')
 
     # querying the db
     c = sqlite3.connect(historyDb)
     cursor = c.cursor()
-    selectStatement = 'SELECT urls.url, urls.title, urls.last_visit_time FROM urls, visits WHERE urls.id = visits.url;'
+    selectStatement = 'SELECT urls.url, urls.title, urls.last_visit_time FROM urls, visits WHERE urls.id = visits.url'
 
     cursor.execute(selectStatement)
     cursorResults = cursor.fetchall()  # tuple
@@ -84,7 +84,7 @@ class getHistory(Wox):
             regexList.append(re.compile(query))
 
         for history in historyList:
-            itemWithTime = history['item'] + stamp2time(history['lastVisitTime'])['touSecond']
+            itemWithTime = history['item'] + stamp2time(history['lastVisitTime'])['toMicroSecond']
             match = True
             for regex in regexList:
                 match = regex.search(itemWithTime.lower()) and match
@@ -96,12 +96,12 @@ class getHistory(Wox):
                     {
                         'Title': history['title'],
                         'SubTitle':  '[{}]'.format(toSecond) + history['url'],
-                        'IcoPath': 'Images\chrome-logo.png',
+                        'IcoPath': './Images/chromeIcon.png',
                         'ContextData': historyIndex,
                         'JsonRPCAction': {
                             'method': 'openUrl',
                             'parameters': [history['url']],
-                            'dontHideAfterAction': False,
+                            "doNotHideAfterAction".replace('oNo', 'on'): False
                         }
                     }
                 )
@@ -111,9 +111,9 @@ class getHistory(Wox):
         history = self.historyList[historyIndex]
         url = history['url']
         title = history['title']
-        logo = 'Images\chrome-logo.png'
+        logo = './Images/chromeIcon.png'
         lastVisitTimeList = stamp2time(history['lastVisitTime'])
-        lastVisitTime = lastVisitTimeList['touSecond']
+        lastVisitTime = lastVisitTimeList['toMicroSecond']
         results = [{
             'Title': 'URL: ' + url,
             'SubTitle': 'Press Enter to Copy URL',
@@ -121,7 +121,7 @@ class getHistory(Wox):
             'JsonRPCAction': {
                 'method': 'copyData',
                 'parameters': [url],
-                'dontHideAfterAction': False,
+                "doNotHideAfterAction".replace('oNo', 'on'): False
             }
         }, {
             'Title': 'Title: ' + title,
@@ -130,11 +130,11 @@ class getHistory(Wox):
             'JsonRPCAction': {
                 'method': 'copyData',
                 'parameters': [title],
-                'dontHideAfterAction': False,
+                "doNotHideAfterAction".replace('oNo', 'on'): False
             }
         }, {
             'Title': 'Last Visit Time: ' + lastVisitTime,
-            'IcoPath': logo,
+            'IcoPath': logo
         }]
         return results
 
