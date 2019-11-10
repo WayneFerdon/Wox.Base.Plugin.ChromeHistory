@@ -92,16 +92,17 @@ class getHistory(Wox):
                 historyIndex = historyList.index(history)
                 lastVisitTime = stamp2time(history['lastVisitTime'])
                 toSecond = lastVisitTime['toSecond']
+                url = history['url']
                 result.append(
                     {
                         'Title': history['title'],
-                        'SubTitle':  '[{}]'.format(toSecond) + history['url'],
+                        'SubTitle': '[{time}]{url}'.format(time=toSecond, url=url),
                         'IcoPath': './Images/chromeIcon.png',
                         'ContextData': historyIndex,
                         'JsonRPCAction': {
                             'method': 'openUrl',
-                            'parameters': [history['url']],
-                            "doNotHideAfterAction".replace('oNo', 'on'): False
+                            'parameters': [url],
+                            "dontHideAfterAction": False
                         }
                     }
                 )
@@ -121,7 +122,7 @@ class getHistory(Wox):
             'JsonRPCAction': {
                 'method': 'copyData',
                 'parameters': [url],
-                "doNotHideAfterAction".replace('oNo', 'on'): False
+                "dontHideAfterAction": False
             }
         }, {
             'Title': 'Title: ' + title,
@@ -130,18 +131,26 @@ class getHistory(Wox):
             'JsonRPCAction': {
                 'method': 'copyData',
                 'parameters': [title],
-                "doNotHideAfterAction".replace('oNo', 'on'): False
+                "dontHideAfterAction": False
             }
         }, {
             'Title': 'Last Visit Time: ' + lastVisitTime,
-            'IcoPath': logo
+            'SubTitle': 'Press Enter to Copy Last Visit Time',
+            'IcoPath': logo,
+            'JsonRPCAction': {
+                'method': 'copyData',
+                'parameters': [lastVisitTime],
+                "dontHideAfterAction": False
+            }
         }]
         return results
 
-    def openUrl(self, url):
+    @classmethod
+    def openUrl(cls, url):
         webbrowser.open(url)
 
-    def copyData(self, data):
+    @classmethod
+    def copyData(cls, data):
         win32clipboard.OpenClipboard()
         win32clipboard.EmptyClipboard()
         win32clipboard.SetClipboardData(win32con.CF_UNICODETEXT, data)
