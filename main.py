@@ -36,21 +36,21 @@ def getTimeFromHistoryList(historyList):
 
 
 class getHistory(Wox):
-    # path to user's history database (Chrome)
-    # and copy a read-only copy
-    dataPath = os.environ['localAppData'.upper()] + '/Google/Chrome/User Data/Default'
-    shutil.copyfile(os.path.join(dataPath, 'History'), os.path.join(dataPath, 'HistoryToRead'))
-    files = os.listdir(dataPath)
-
-    historyDb = os.path.join(dataPath, 'HistoryToRead')
+    # path to user's history database (Chrome) and copy a read-only copy
+    # default path is C:/Users/[UserName]/AppData/Local/Google/User Data/Default/History
+    localAppData = os.environ['localAppData'.upper()]
+    dataPath = localAppData + '/Google/Chrome/User Data/Default'
+    history = dataPath + '/History'
+    historyToRead = dataPath + '/HistoryToRead'
+    shutil.copyfile(history, historyToRead)
 
     # querying the db
-    c = sqlite3.connect(historyDb)
-    cursor = c.cursor()
+    connection = sqlite3.connect(historyToRead)
+    cursor = connection.cursor()
     selectStatement = 'SELECT urls.url, urls.title, urls.last_visit_time FROM urls, visits WHERE urls.id = visits.url'
 
     cursor.execute(selectStatement)
-    cursorResults = cursor.fetchall()  # tuple
+    cursorResults = cursor.fetchall()
     historyList = []
     items = []
     for url, title, lastVisitTime in cursorResults:
