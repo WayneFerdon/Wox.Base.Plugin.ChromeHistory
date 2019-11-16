@@ -10,71 +10,127 @@ import win32con
 import win32clipboard
 import time
 import datetime
+from urllib.parse import urlparse
 
 
 def stamp2time(timeStamp):
     baseDate = datetime.datetime(1601, 1, 1)
-    yearSecond = timeStamp / 1000000
-    microSecond = timeStamp % 1000
-    milliSecond = (timeStamp % 1000000 - microSecond) // 1000
-    trueYearSecond = baseDate + datetime.timedelta(seconds=yearSecond, hours=8)
-    toSecond = time.strftime('%Y-%m-%d %H:%M:%S', datetime.datetime.timetuple(trueYearSecond))
-    toMilliSecond = toSecond + '.' + str(milliSecond).zfill(3)
-    toMicroSecond = toMilliSecond + ' ' + str(microSecond).zfill(3)
+    yearSec = timeStamp / 1000000
+    microSec = timeStamp % 1000
+    milliSec = (timeStamp % 1000000 - microSec) // 1000
+    trueYearSec = baseDate + datetime.timedelta(seconds=yearSec, hours=8)
+    toSec = time.strftime('%Y-%m-%d %H:%M:%S', datetime.datetime.timetuple(trueYearSec))
+    toMilliSec = toSec + '.' + str(milliSec).zfill(3)
+    toMicroSec = toMilliSec + ' ' + str(microSec).zfill(3)
+
     return {
-        'toSecond': toSecond,
-        'toMilliSecond': toMilliSecond,
-        'toMicroSecond': toMicroSecond,
-        'trueYearSecond': trueYearSecond,
-        'microSecond': microSecond,
-        'milliSecond': milliSecond
+        'toSec': toSec,
+        'toMilliSec': toMilliSec,
+        'toMicroSec': toMicroSec,
+        'trueYearSec': trueYearSec,
+        'microSec': microSec,
+        'milliSec': milliSec
     }
 
 
-def getTimeFromHistoryList(historyList):
-    return historyList['lastVisitTime']
+def getTimeFromHisList(hisList):
+    return hisList['lastVisitTime']
 
 
 class getHistory(Wox):
-    # path to user's history database (Chrome) and copy a read-only copy
-    # default path is C:/Users/[UserName]/AppData/Local/Google/User Data/Default/History
+    # <editor-fold desc="set paths of history database and icon database">
     localAppData = os.environ['localAppData'.upper()]
     dataPath = localAppData + '/Google/Chrome/User Data/Default'
-    history = dataPath + '/History'
-    historyToRead = dataPath + '/HistoryToRead'
-    shutil.copyfile(history, historyToRead)
+    his = dataPath + '/History'
+    favIcons = dataPath + '/Favicons'
 
-    # querying the db
-    connection = sqlite3.connect(historyToRead)
-    cursor = connection.cursor()
-    selectStatement = 'SELECT urls.url, urls.title, urls.last_visit_time FROM urls, visits WHERE urls.id = visits.url'
+    hisToRead = dataPath + '/HistoryToRead'
+    favIconsToRead = dataPath + '/FaviconsToRead'
+    # </editor-fold>
 
-    cursor.execute(selectStatement)
-    cursorResults = cursor.fetchall()
-    historyList = []
+    # <editor-fold desc="create a read-only copy">
+    shutil.copyfile(his, hisToRead)
+    shutil.copyfile(favIcons, favIconsToRead)
+    # </editor-fold>
+
+    # <editor-fold desc="connect to database copy">
+    favIconsCursor = sqlite3.connect(favIconsToRead).cursor()
+    hisCursor = sqlite3.connect(hisToRead).cursor()
+    # </editor-fold>
+
+    # <editor-fold desc="create icon image temps">
+    favIconBitmapSelectStatement = 'SELECT icon_id, image_data, width, height FROM favicon_bitmaps'
+    favIconsCursor.execute(favIconBitmapSelectStatement)
+    favIconBitmapCursorResults = favIconsCursor.fetchall()
+    favIconBitmapInfoList = []
+    favIconBitmapIdList = []
+    for iconId, imageData, width, height in favIconBitmapCursorResults:
+        if iconId in favIconBitmapIdList:
+            iconIdIndex = favIconBitmapIdList.index(iconId)
+            if width < favIconBitmapInfoList[iconIdIndex][0] or height < favIconBitmapInfoList[iconIdIndex][1]:
+                continue
+        with open('./Images/iconId{}.png'.format(iconId), 'wb') as f:
+            f.write(imageData)
+        favIconBitmapIdList.append(iconId)
+        favIconBitmapInfoList.append([width, height])
+    # </editor-fold>
+
+    # <editor-fold desc="get url icon id"
+    favIconsSelectStatement = 'SELECT page_url, icon_id FROM icon_mapping'
+    favIconsCursor.execute(favIconsSelectStatement)
+    favIconsCursorResults = favIconsCursor.fetchall()
+    netLocationIconList = []
+    netLocationList = []
+    for url, iconId in favIconsCursorResults:
+        netLocation = urlparse(url).netloc
+        if netLocation in netLocationList:
+            continue
+        netLocationList.append(netLocation)
+        netLocationIconList.append(iconId)
+    # </editor-fold>
+
+    favIconsCursor.close()
+
+    # <editor-fold desc="get history info">
+    hisSelectStatement = 'SELECT urls.url, urls.title, urls.last_visit_time FROM urls, visits WHERE urls.id = visits.url'
+    hisCursor.execute(hisSelectStatement)
+    hisCursorResults = hisCursor.fetchall()
+    hisList = []
     items = []
-    for url, title, lastVisitTime in cursorResults:
+    for url, title, lastVisitTime in hisCursorResults:
         item = url + title
         if item in items:
             itemIndex = items.index(item)
-            if historyList[itemIndex]['lastVisitTime'] < lastVisitTime:
-                historyList[itemIndex]['lastVisitTime'] = lastVisitTime
+            if hisList[itemIndex]['lastVisitTime'] < lastVisitTime:
+                hisList[itemIndex]['lastVisitTime'] = lastVisitTime
             continue
         items.append(item)
-        historyList.append(
+        netLocation = urlparse(url).netloc
+        if netLocation in netLocationList:
+            iconIndex = netLocationList.index(netLocation)
+            iconId = netLocationIconList[iconIndex]
+        else:
+            iconId = 0
+        hisList.append(
             {
                 'url': url,
                 'title': title,
                 'item': item,
-                'lastVisitTime': lastVisitTime
+                'lastVisitTime': lastVisitTime,
+                'iconId': iconId
             }
         )
-    historyList.sort(key=getTimeFromHistoryList, reverse=True)
+    hisList.sort(key=getTimeFromHisList, reverse=True)
+    # </editor-fold>
+
+    hisCursor.close()
 
     def query(self, queryString):
+        # import history list
         result = []
-        historyList = self.historyList
+        hisList = self.hisList
 
+        # process query
         queryStringLower = queryString.lower()
         queryList = queryStringLower.split()
         regexList = []
@@ -83,22 +139,27 @@ class getHistory(Wox):
             # regexList.append(re.compile(pattern))
             regexList.append(re.compile(query))
 
-        for history in historyList:
-            itemWithTime = history['item'] + stamp2time(history['lastVisitTime'])['toMicroSecond']
+        # set result
+        for his in hisList:
+            itemWithTime = his['item'] + stamp2time(his['lastVisitTime'])['toMicroSec']
             match = True
             for regex in regexList:
                 match = regex.search(itemWithTime.lower()) and match
             if match:
-                historyIndex = historyList.index(history)
-                lastVisitTime = stamp2time(history['lastVisitTime'])
-                toSecond = lastVisitTime['toSecond']
-                url = history['url']
+                hisIndex = hisList.index(his)
+                lastVisitTime = stamp2time(his['lastVisitTime'])
+                toSec = lastVisitTime['toSec']
+                url = his['url']
+                if his['iconId'] != 0:
+                    iconPath = './Images/iconId{}.png'.format(his['iconId'])
+                else:
+                    iconPath = './Images/chromeIcon.png'
                 result.append(
                     {
-                        'Title': history['title'],
-                        'SubTitle': '[{time}]{url}'.format(time=toSecond, url=url),
-                        'IcoPath': './Images/chromeIcon.png',
-                        'ContextData': historyIndex,
+                        'Title': his['title'],
+                        'SubTitle': '[{time}]{url}'.format(time=toSec, url=url),
+                        'IcoPath': iconPath,
+                        'ContextData': hisIndex,
                         'JsonRPCAction': {
                             'method': 'openUrl',
                             'parameters': [url],
@@ -108,17 +169,20 @@ class getHistory(Wox):
                 )
         return result
 
-    def context_menu(self, historyIndex):
-        history = self.historyList[historyIndex]
-        url = history['url']
-        title = history['title']
-        logo = './Images/chromeIcon.png'
-        lastVisitTimeList = stamp2time(history['lastVisitTime'])
-        lastVisitTime = lastVisitTimeList['toMicroSecond']
+    def context_menu(self, hisIndex):
+        his = self.hisList[hisIndex]
+        url = his['url']
+        title = his['title']
+        if his['iconId'] != 0:
+            iconPath = './Images/iconId{}.png'.format(his['iconId'])
+        else:
+            iconPath = './Images/chromeIcon.png'
+        lastVisitTimeList = stamp2time(his['lastVisitTime'])
+        lastVisitTime = lastVisitTimeList['toMicroSec']
         results = [{
             'Title': 'URL: ' + url,
             'SubTitle': 'Press Enter to Copy URL',
-            'IcoPath': logo,
+            'IcoPath': iconPath,
             'JsonRPCAction': {
                 'method': 'copyData',
                 'parameters': [url],
@@ -127,7 +191,7 @@ class getHistory(Wox):
         }, {
             'Title': 'Title: ' + title,
             'SubTitle': 'Press Enter to Copy Title',
-            'IcoPath': logo,
+            'IcoPath': iconPath,
             'JsonRPCAction': {
                 'method': 'copyData',
                 'parameters': [title],
@@ -136,7 +200,7 @@ class getHistory(Wox):
         }, {
             'Title': 'Last Visit Time: ' + lastVisitTime,
             'SubTitle': 'Press Enter to Copy Last Visit Time',
-            'IcoPath': logo,
+            'IcoPath': iconPath,
             'JsonRPCAction': {
                 'method': 'copyData',
                 'parameters': [lastVisitTime],
