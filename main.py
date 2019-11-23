@@ -23,133 +23,181 @@ def stamp2time(timeStamp, timeFormat):
     microSec = timeStamp % 1000
     milliSec = (timeStamp % 1000000 - microSec) // 1000
     toMilliSec = toSec + '.' + str(milliSec).zfill(3)
-    if timeFormat == 'toMilliSec':
-        return toMilliSec
+    # if timeFormat == 'toMilliSec':
+    #     return toMilliSec
     toMicroSec = toMilliSec + ' ' + str(microSec).zfill(3)
     if timeFormat == 'toMicroSec':
         return toMicroSec
 
 
-def getTimeFromHisList(hisList):
+def timeFromHisList(hisList):
     return hisList['lastVisitTime']
 
 
-class getHistory(Wox):
-# class getHistory():
-    # <editor-fold desc="set paths of history database and icon database">
-    localAppData = os.environ['localAppData'.upper()]
-    dataPath = localAppData + '/Google/Chrome/User Data/Default'
-    his = dataPath + '/History'
-    favIcons = dataPath + '/Favicons'
-    hisToRead = dataPath + '/HistoryToRead'
-    favIconsToRead = dataPath + '/FaviconsToRead'
-    # </editor-fold>
-
-    # <editor-fold desc="create a read-only copy">
-    shutil.copyfile(his, hisToRead)
-    shutil.copyfile(favIcons, favIconsToRead)
-    # </editor-fold>
-
-    # <editor-fold desc="connect to database copy">
-    favIconsCursor = sqlite3.connect(favIconsToRead).cursor()
-    hisCursor = sqlite3.connect(hisToRead).cursor()
-    # </editor-fold>
-
-    # <editor-fold desc="create icon image temps">
-    bitmapSelectStatement = 'SELECT icon_id, image_data, width, height ' \
-                            'FROM favicon_bitmaps'
-    favIconsCursor.execute(bitmapSelectStatement)
-    bitmapCursorResults = favIconsCursor.fetchall()
-    bitmapInfoList = dict()
-    for iconId, imageData, width, height in bitmapCursorResults:
-        if iconId in bitmapInfoList.keys():
-            if width < bitmapInfoList[iconId][0] or height < bitmapInfoList[iconId][1]:
-                continue
+def createIcon(bitmapInfoList):
+    for iconId in bitmapInfoList.keys():
+        imageData = bitmapInfoList[iconId]['imageData']
         with open('./Images/iconId{}.png'.format(iconId), 'wb') as f:
             f.write(imageData)
-        bitmapInfoList.update(
-            {
-                iconId: [width, height]
-            }
-        )
-    # </editor-fold>
 
-    # <editor-fold desc="get url icon id"
-    urlSelectStatement = 'SELECT page_url, icon_id ' \
-                         'FROM icon_mapping'
-    favIconsCursor.execute(urlSelectStatement)
-    urlCursorResults = favIconsCursor.fetchall()
-    iconList = dict()
-    for url, iconId in urlCursorResults:
-        netLocation = urlparse(url).netloc
-        if netLocation in iconList.keys():
-            continue
-        else:
-            iconList.update(
+
+class chromeCache:
+    def __init__(self):
+        localAppData = os.environ['localAppData'.upper()]
+        self.__dataPath__ = localAppData + '/Google/Chrome/User Data/Default'
+        self.bitmapInfoList, self.iconList = self._iconInfo_()
+
+    def _iconData_(self):
+        favIcons = self.__dataPath__ + '/Favicons'
+        iconData = self.__dataPath__ + '/FaviconsToRead'
+        shutil.copyfile(favIcons, iconData)
+        return iconData
+
+    def _hisData_(self):
+        his = self.__dataPath__ + '/History'
+        hisData = self.__dataPath__ + '/HistoryToRead'
+        shutil.copyfile(his, hisData)
+        return hisData
+
+    def _loadBookmarkData_(self):
+        bookmark = self.__dataPath__ + '/Bookmarks'
+        with open(bookmark, 'r', encoding='UTF-8') as f:
+            bookmarkData = json.load(f)
+        return bookmarkData
+
+    def _loadIconData_(self):
+        cursor = sqlite3.connect(self._iconData_()).cursor()
+        bitmapCursorResults = cursor.execute(
+            'SELECT icon_id, image_data, width, height '
+            'FROM favicon_bitmaps'
+        ).fetchall()
+        urlCursorResults = cursor.execute(
+            'SELECT page_url, icon_id '
+            'FROM icon_mapping'
+        ).fetchall()
+        cursor.close()
+        return bitmapCursorResults, urlCursorResults
+
+    def _loadHisData_(self):
+        cursor = sqlite3.connect(self._hisData_()).cursor()
+        hisInfoList = cursor.execute(
+            'SELECT urls.url, urls.title, urls.last_visit_time '
+            'FROM urls, visits '
+            'WHERE urls.id = visits.url'
+        ).fetchall()
+        cursor.close()
+        return hisInfoList
+
+    def _iconInfo_(self):
+        bitmapList, urlList = self._loadIconData_()
+        bitmapInfoList = dict()
+        for iconId, imageData, width, height in bitmapList:
+            if iconId in bitmapInfoList.keys():
+                if (
+                        width < bitmapInfoList[iconId]['width']
+                        or height < bitmapInfoList[iconId]['height']
+                ):
+                    continue
+            bitmapInfoList.update(
                 {
-                    netLocation: iconId
+                    iconId: {
+                        'imageData': imageData,
+                        'width': width,
+                        'height': height
+                    }
                 }
             )
-    # </editor-fold>
+        iconList = dict()
+        for url, iconId in urlList:
+            netLocation = urlparse(url).netloc
+            if netLocation not in iconList.keys():
+                iconList.update(
+                    {
+                        netLocation: iconId
+                    }
+                )
+        return bitmapInfoList, iconList
 
-    favIconsCursor.close()
+    def hisList(self):
+        hisInfoList = self._loadHisData_()
+        iconList = self.iconList
+        hisList = list()
+        items = list()
+        for url, title, lastVisitTime in hisInfoList:
+            item = url + title
+            if item in items:
+                itemIndex = items.index(item)
+                if hisList[itemIndex]['lastVisitTime'] < lastVisitTime:
+                    hisList[itemIndex]['lastVisitTime'] = lastVisitTime
+            else:
+                items.append(item)
+                netLocation = urlparse(url).netloc
+                if netLocation in iconList.keys():
+                    iconId = iconList[netLocation]
+                else:
+                    iconId = 0
+                hisList.append(
+                    {
+                        'url': url,
+                        'title': title,
+                        'item': item,
+                        'lastVisitTime': lastVisitTime,
+                        'iconId': iconId
+                    }
+                )
+        hisList.sort(key=timeFromHisList, reverse=True)
+        return hisList
 
-    # <editor-fold desc="get history info">
-    hisSelectStatement = 'SELECT urls.url, urls.title, urls.last_visit_time ' \
-                         'FROM urls, visits ' \
-                         'WHERE urls.id = visits.url'
-    hisCursor.execute(hisSelectStatement)
-    hisCursorResults = hisCursor.fetchall()
-    hisList = []
-    items = []
-    for url, title, lastVisitTime in hisCursorResults:
-        item = url + title
-        if item in items:
-            itemIndex = items.index(item)
-            if hisList[itemIndex]['lastVisitTime'] < lastVisitTime:
-                hisList[itemIndex]['lastVisitTime'] = lastVisitTime
-            continue
-        items.append(item)
-        netLocation = urlparse(url).netloc
-        if netLocation in iconList.keys():
-            iconId = iconList[netLocation]
-        else:
-            iconId = 0
-        hisList.append(
-            {
-                'url': url,
-                'title': title,
-                'item': item,
-                'lastVisitTime': lastVisitTime,
-                'iconId': iconId
-            }
-        )
-    hisList.sort(key=getTimeFromHisList, reverse=True)
-    # </editor-fold>
+    def bookmarkList(self):
+        bookmarkList = list()
+        data = self._loadBookmarkData_()
+        iconList = self.iconList
+        for root in data['roots']:
+            try:
+                childItems = data['roots'][root]['children']
+            except Exception:
+                continue
+            bookmarkList = makeList(bookmarkList, childItems, root)
 
-    hisCursor.close()
+        for index in range(len(bookmarkList)):
+            url = bookmarkList[index]['url']
+            netLocation = urlparse(url).netloc
+            if netLocation in iconList.keys():
+                bookmarkList[index]['iconId'] = iconList[netLocation]
+            else:
+                bookmarkList[index]['iconId'] = 0
+        return bookmarkList
 
-    def query(self, queryString):
-        # import history list
-        result = []
-        hisList = self.hisList
 
-        # process query
+class regexList:
+    def __init__(self, queryString):
         queryStringLower = queryString.lower()
         queryList = queryStringLower.split()
-        regexList = []
+        self.regexList = list()
         for query in queryList:
             # pattern = '.*?'.join(query)
             # regexList.append(re.compile(pattern))
-            regexList.append(re.compile(query))
+            self.regexList.append(re.compile(query))
 
-        # set result
+    def match(self, item):
+        match = True
+        for regex in self.regexList:
+            match = regex.search(item) and match
+        return match
+
+
+class getHistory(Wox):
+    cache = chromeCache()
+    createIcon(cache.bitmapInfoList)
+    hisList = cache.hisList()
+
+    def query(self, queryString):
+        hisList = self.hisList
+        regex = regexList(queryString)
+        result = list()
         for his in hisList:
             itemWithTime = his['item'] + stamp2time(his['lastVisitTime'], 'toMicroSec')
-            match = True
-            for regex in regexList:
-                match = regex.search(itemWithTime.lower()) and match
-            if match:
+            if regex.match(itemWithTime.lower()):
                 hisIndex = hisList.index(his)
                 lastVisitTime = stamp2time(his['lastVisitTime'], 'toSec')
                 url = his['url']
@@ -181,34 +229,36 @@ class getHistory(Wox):
         else:
             iconPath = './Images/chromeIcon.png'
         lastVisitTime = stamp2time(his['lastVisitTime'], 'toMicroSec')
-        results = [{
-            'Title': 'URL: ' + url,
-            'SubTitle': 'Press Enter to Copy URL',
-            'IcoPath': iconPath,
-            'JsonRPCAction': {
-                'method': 'copyData',
-                'parameters': [url],
-                "dontHideAfterAction": False
+        results = [
+            {
+                'Title': 'URL: ' + url,
+                'SubTitle': 'Press Enter to Copy URL',
+                'IcoPath': iconPath,
+                'JsonRPCAction': {
+                    'method': 'copyData',
+                    'parameters': [url],
+                    "dontHideAfterAction": False
+                }
+            }, {
+                'Title': 'Title: ' + title,
+                'SubTitle': 'Press Enter to Copy Title',
+                'IcoPath': iconPath,
+                'JsonRPCAction': {
+                    'method': 'copyData',
+                    'parameters': [title],
+                    "dontHideAfterAction": False
+                }
+            }, {
+                'Title': 'Last Visit Time: ' + lastVisitTime,
+                'SubTitle': 'Press Enter to Copy Last Visit Time',
+                'IcoPath': iconPath,
+                'JsonRPCAction': {
+                    'method': 'copyData',
+                    'parameters': [lastVisitTime],
+                    "dontHideAfterAction": False
+                }
             }
-        }, {
-            'Title': 'Title: ' + title,
-            'SubTitle': 'Press Enter to Copy Title',
-            'IcoPath': iconPath,
-            'JsonRPCAction': {
-                'method': 'copyData',
-                'parameters': [title],
-                "dontHideAfterAction": False
-            }
-        }, {
-            'Title': 'Last Visit Time: ' + lastVisitTime,
-            'SubTitle': 'Press Enter to Copy Last Visit Time',
-            'IcoPath': iconPath,
-            'JsonRPCAction': {
-                'method': 'copyData',
-                'parameters': [lastVisitTime],
-                "dontHideAfterAction": False
-            }
-        }]
+        ]
         return results
 
     @classmethod
