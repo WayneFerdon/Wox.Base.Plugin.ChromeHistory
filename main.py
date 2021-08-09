@@ -12,6 +12,7 @@ import time
 import datetime
 from urllib.parse import urlparse
 
+TargetPlatform = "Chrome" # Chrome, Edge
 
 def stamp2time(timeStamp, timeFormat):
     baseDate = datetime.datetime(1601, 1, 1)
@@ -44,7 +45,10 @@ def createIcon(bitmapInfoList):
 class chromeCache:
     def __init__(self):
         localAppData = os.environ['localAppData'.upper()]
-        self.__dataPath__ = localAppData + '/Google/Chrome/User Data/Default'
+        if(TargetPlatform == "Chrome"):
+            self.__dataPath__ = localAppData + '/Google/Chrome/User Data/Default'
+        elif(TargetPlatform == "Edge"):
+            self.__dataPath__ = localAppData + '/Microsoft/Edge/User Data/Default'
         self.bitmapInfoList, self.iconList = self._iconInfo_()
 
     def _iconData_(self):
@@ -208,7 +212,10 @@ class getHistory(Wox):
                 if his['iconId'] != 0:
                     iconPath = './Images/iconId{}.png'.format(his['iconId'])
                 else:
-                    iconPath = './Images/chromeIcon.png'
+                    if(TargetPlatform == "Chrome"):
+                        iconPath = './Images/chromeIcon.png'
+                    elif(TargetPlatform == "Edge"):
+                        iconPath = './Images/edgeIcon.png'
                 result.append(
                     {
                         'Title': his['title'],
@@ -231,7 +238,10 @@ class getHistory(Wox):
         if his['iconId'] != 0:
             iconPath = './Images/iconId{}.png'.format(his['iconId'])
         else:
-            iconPath = './Images/chromeIcon.png'
+            if(TargetPlatform == "Chrome"):
+                iconPath = './Images/chromeIcon.png'
+            elif(TargetPlatform == "Edge"):
+                iconPath = './Images/edgeIcon.png'
         lastVisitTime = stamp2time(his['lastVisitTime'], 'toMicroSec')
         results = [
             {
