@@ -38,8 +38,11 @@ def timeFromHisList(hisList):
 def createIcon(bitmapInfoList):
     for iconId in bitmapInfoList.keys():
         imageData = bitmapInfoList[iconId]['imageData']
-        with open('./Images/iconId{}.png'.format(iconId), 'wb') as f:
-            f.write(imageData)
+        try:
+            with open('./Images/iconId{}.png'.format(iconId), 'wb') as f:
+                f.write(imageData)
+        except PermissionError:
+            pass
 
 
 class chromeCache:
