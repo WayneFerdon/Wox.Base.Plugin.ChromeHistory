@@ -245,6 +245,7 @@ class getHistory(Wox):
                 iconPath = './Images/chromeIcon.png'
             elif(TargetPlatform == "Edge"):
                 iconPath = './Images/edgeIcon.png'
+        iconPath = os.path.join(os.path.abspath('./'),iconPath)
         lastVisitTime = stamp2time(his['lastVisitTime'], 'toMicroSec')
         results = [
             {
