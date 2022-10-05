@@ -2,7 +2,7 @@
 # Author: wayneferdon wayneferdon@hotmail.com
 # Date: 2022-10-05 16:08:29
 # LastEditors: wayneferdon wayneferdon@hotmail.com
-# LastEditTime: 2022-10-05 17:57:32
+# LastEditTime: 2022-10-05 18:56:51
 # FilePath: \Wox.Plugin.ChromeHistory\ChromeCache.py
 # ----------------------------------------------------------------
 # Copyright (c) 2022 by Wayne Ferdon Studio. All rights reserved.
@@ -145,21 +145,19 @@ class Cache:
     def getHistories(self) -> list[History]:
         historyInfos = self._loadHisData_()
         iconDict = self.iconDict
-        histories = list[History]()
-        items = list[str]()
+        histories = dict[str, History]()
         for url, title, lastVisitTime in historyInfos:
-            item = url + title
-            if item in items:
-                itemIndex = items.index(item)
-                if histories[itemIndex].lastVisitTime < lastVisitTime:
-                    histories[itemIndex].lastVisitTime = lastVisitTime
+            key = url + title
+            if key in histories.keys():
+                if histories[key].lastVisitTime < lastVisitTime:
+                    histories[key].lastVisitTime = lastVisitTime
             else:
-                items.append(item)
                 if url in iconDict.keys():
                     iconID = iconDict[url]
                 else:
                     iconID = 0
-                histories.append(History(title,url,lastVisitTime,iconID))
+                histories[key] = History(title,url,lastVisitTime, iconID)
+        histories = list(histories.values())
         histories.sort(key=self.timeFromHisList, reverse=True)
         return histories
 
