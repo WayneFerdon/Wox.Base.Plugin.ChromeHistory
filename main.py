@@ -2,7 +2,7 @@
 # Author: wayneferdon wayneferdon@hotmail.com
 # Date: 2022-02-12 06:25:53
 # LastEditors: wayneferdon wayneferdon@hotmail.com
-# LastEditTime: 2022-10-05 17:51:30
+# LastEditTime: 2022-10-05 18:15:35
 # FilePath: \Wox.Plugin.ChromeHistory\main.py
 # ----------------------------------------------------------------
 # Copyright (c) 2022 by Wayne Ferdon Studio. All rights reserved.
@@ -21,7 +21,7 @@ class GetHistory(ChromeWox):
 
     def getResult(self, regex, data:History):
         item = data.url + data.title + stamp2time(data.lastVisitTime, 'toMicroSec')
-        if not regex.match(item.lower()):
+        if not regex.match(item):
             return
         if data.iconID != 0:
             iconPath = './Images/icon{}.png'.format(data.iconID)
