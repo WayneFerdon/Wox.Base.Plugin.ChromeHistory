@@ -1,9 +1,9 @@
 # ----------------------------------------------------------------
 # Author: wayneferdon wayneferdon@hotmail.com
 # Date: 2022-10-05 16:08:29
-# LastEditors: wayneferdon wayneferdon@hotmail.com
-# LastEditTime: 2022-10-07 20:22:16
-# FilePath: \Wox.Plugin.ChromeHistory\ChromeCache.py
+# LastEditors: WayneFerdon wayneferdon@hotmail.com
+# LastEditTime: 2023-02-10 15:46:42
+# FilePath: \Plugins\Wox.Plugin.ChromeHistory\ChromeCache.py
 # ----------------------------------------------------------------
 # Copyright (c) 2022 by Wayne Ferdon Studio. All rights reserved.
 # Licensed to the .NET Foundation under one or more agreements.
@@ -56,6 +56,8 @@ class ChromeData():
 
     @staticmethod
     def __getIconPath__(iconID):
+        if not os.path.exists('./Images/Temp'):
+            os.makedirs('./Images/Temp')
         return './Images/Temp/icon{}.png'.format(iconID)
 
 class Bookmark(ChromeData):
