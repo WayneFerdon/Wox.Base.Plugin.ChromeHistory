@@ -10,4 +10,4 @@
 
     > it's for another plugin: [Wox.Plugin.ChromeBookmarks](https://github.com/wayneferdon/Wox.Plugin.ChromeBookmarks)
 
-4. To Change from flow launcher to legacy Wox launcher, see [Query.py: Line20](https://github.com/WayneFerdon/Wox.Plugin.ChromeHistory/blob/master/Query.py#L20) ~ [Query.py: Line42](https://github.com/WayneFerdon/Wox.Plugin.ChromeHistory/blob/master/Query.py#L42)
+4. To Change from [Flow Launcher](https://github.com/Flow-Launcher/Flow.Launcher) to [legacy Wox launcher](https://github.com/Wox-launcher/Wox), see [Query.py: Line20](https://github.com/WayneFerdon/Wox.Plugin.SteamGames/blob/master/Query.py#L20) ~ [Query.py: Line42](https://github.com/WayneFerdon/Wox.Plugin.SteamGames/blob/master/Query.py#L42)
