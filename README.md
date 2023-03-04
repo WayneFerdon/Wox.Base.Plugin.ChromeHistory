@@ -1,3 +1,15 @@
+<!--
+ * @Author: WayneFerdon wayneferdon@hotmail.com
+ * @Date: 2023-03-04 12:45:56
+ * @LastEditors: WayneFerdon wayneferdon@hotmail.com
+ * @LastEditTime: 2023-03-04 23:29:46
+ * @FilePath: \Flow.Launcher.Plugin.ChromeHistory\README.md
+ * ----------------------------------------------------------------
+ * Copyright (c) 2023 by Wayne Ferdon Studio. All rights reserved.
+ * Licensed to the .NET Foundation under one or more agreements.
+ * The .NET Foundation licenses this file to you under the MIT license.
+ * See the LICENSE file in the project root for more information.
+-->
 # Wox.Plugin.ChromeHistory
 
 1. To Change Platform(current supported: Chrome and Chromium Edge), please chang the value of [ChromeQuery.py: Line19: TargetPlatform](https://github.com/WayneFerdon/Wox.Plugin.ChromeHistory/blob/master/ChromeQuery.py#L19)
