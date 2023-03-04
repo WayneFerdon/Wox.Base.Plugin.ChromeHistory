@@ -1,9 +1,9 @@
 # ----------------------------------------------------------------
 # Author: wayneferdon wayneferdon@hotmail.com
 # Date: 2022-02-12 06:25:53
-# LastEditors: wayneferdon wayneferdon@hotmail.com
-# LastEditTime: 2022-10-07 20:18:24
-# FilePath: \Wox.Plugin.ChromeHistory\main.py
+# LastEditors: WayneFerdon wayneferdon@hotmail.com
+# LastEditTime: 2023-03-04 13:23:24
+# FilePath: \Flow.Launcher.Plugin.ChromeHistory\main.py
 # ----------------------------------------------------------------
 # Copyright (c) 2022 by Wayne Ferdon Studio. All rights reserved.
 # Licensed to the .NET Foundation under one or more agreements.
@@ -13,9 +13,9 @@
 
 # -*- coding: utf-8 -*-
 from TimeStamp import *
-from ChromeWox import *
+from ChromeQuery import *
 
-class GetHistory(ChromeWox):
+class GetHistory(ChromeQuery):
     def _getDatas_(self):
         return Cache.getHistories()
 
@@ -24,7 +24,7 @@ class GetHistory(ChromeWox):
         if not regex.match(item):
             return
         subTitle = '[{time}] {url}'.format(time=stamp2time(data.lastVisitTime, 'toSec'), url=data.url)
-        return WoxResult(data.title,subTitle,data.icon,self._datas_.index(data),self._openUrl_.__name__,True,data.url).toDict()
+        return QueryResult(data.title,subTitle,data.icon,self._datas_.index(data),self._openUrl_.__name__,True,data.url).toDict()
 
     def _extraContextMenu_(self, data: History):
         lastVisitTime = stamp2time(data.lastVisitTime, 'toMicroSec')

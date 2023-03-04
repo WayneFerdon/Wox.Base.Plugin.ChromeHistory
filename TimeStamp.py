@@ -1,17 +1,3 @@
-# ----------------------------------------------------------------
-# Author: wayneferdon wayneferdon@hotmail.com
-# Date: 2022-10-05 16:49:45
-# LastEditors: wayneferdon wayneferdon@hotmail.com
-# LastEditTime: 2022-10-05 17:06:49
-# FilePath: \undefinedc:\Users\WayneFerdon\AppData\Local\Wox\app-1.4.1196\Plugins\Wox.Plugin.ChromeHistory\TimeStamp.py
-# ----------------------------------------------------------------
-# Copyright (c) 2022 by Wayne Ferdon Studio. All rights reserved.
-# Licensed to the .NET Foundation under one or more agreements.
-# The .NET Foundation licenses this file to you under the MIT license.
-# See the LICENSE file in the project root for more information.
-# ----------------------------------------------------------------
-
-# -*- coding: utf-8 -*-
 import time
 import datetime
 

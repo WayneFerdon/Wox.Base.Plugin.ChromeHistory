@@ -1,17 +1,16 @@
 # ----------------------------------------------------------------
-# Author: wayneferdon wayneferdon@hotmail.com
-# Date: 2022-10-05 16:15:12
-# LastEditors: wayneferdon wayneferdon@hotmail.com
-# LastEditTime: 2022-10-07 20:09:13
-# FilePath: \Wox.Plugin.ChromeBookmarks\RegexList.py
+# Author: WayneFerdon wayneferdon@hotmail.com
+# Date: 2023-03-04 12:45:56
+# LastEditors: WayneFerdon wayneferdon@hotmail.com
+# LastEditTime: 2023-03-04 13:23:44
+# FilePath: \Flow.Launcher.Plugin.ChromeHistory\RegexList.py
 # ----------------------------------------------------------------
-# Copyright (c) 2022 by Wayne Ferdon Studio. All rights reserved.
+# Copyright (c) 2023 by Wayne Ferdon Studio. All rights reserved.
 # Licensed to the .NET Foundation under one or more agreements.
 # The .NET Foundation licenses this file to you under the MIT license.
 # See the LICENSE file in the project root for more information.
 # ----------------------------------------------------------------
 
-# -*- coding: utf-8 -*-
 import re
 
 class RegexList:
