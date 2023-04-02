@@ -54,7 +54,6 @@ class Launcher(LauncherBase):
     if not os.path.isfile(SettingPath):
         SettingPath = GetSettingPath(PathName, True)
 
-
 class Query(Launcher):
 # class Query():
     @classmethod
@@ -94,22 +93,3 @@ class QueryResult:
                 "doNotHideAfterAction".replace('oNo', 'on'): (not self.hideAfterAction), 
             }
         return jsonResult
-
-class QueryDebug:
-    # 静态变量
-    Instance=None
-    _flag=False
-    def __new__(cls, *args, **kwargs):
-        if cls.Instance is None:
-            cls.Instance=super().__new__(cls)
-        return cls.Instance
-    def __init__(self):
-        if QueryDebug._flag:
-            return
-        QueryDebug._flag=True
-
-    Logs = list[str]()
-    
-    @staticmethod
-    def Log(*info):
-        QueryDebug.Instance.Logs.append([len(QueryDebug.Instance.Logs), str(list(info))[1:-1] + "\n" + "\n".join(traceback.format_stack())])
