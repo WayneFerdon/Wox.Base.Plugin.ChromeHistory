@@ -2,8 +2,8 @@
 # Author: wayneferdon wayneferdon@hotmail.com
 # Date: 2022-10-05 16:16:00
 # LastEditors: WayneFerdon wayneferdon@hotmail.com
-# LastEditTime: 2023-03-04 14:11:40
-# FilePath: \Flow.Launcher.Plugin.TimeStampc:\Users\WayneFerdon\AppData\Local\FlowLauncher\app-1.14.0\Plugins\Flow.Launcher.Plugin.ChromeHistory\Query.py
+# LastEditTime: 2023-04-02 12:09:08
+# FilePath: \Flow.Launcher.Plugin.ChromeHistory\Query.py
 # ----------------------------------------------------------------
 # Copyright (c) 2022 by Wayne Ferdon Studio. All rights reserved.
 # Licensed to the .NET Foundation under one or more agreements.
@@ -21,9 +21,6 @@ from flowlauncher import FlowLauncher as LauncherBase
 # from wox import Wox as LauncherBase
 
 class Launcher(LauncherBase):
-    Name = 'Flow.Launcher' # or: 'Wox'
-    PathName = 'FlowLauncher' # or: 'Wox'
-
     class API(Enum):
         ChangeQuery = 0, # change launcher query
         RestartApp = 1, # restart Launcher
@@ -41,12 +38,22 @@ class Launcher(LauncherBase):
         StopLoadingBar = 13, # stop loading animation in launcher
         ReloadAllPluginData = 14, # reload all launcher plugins
 
-    
-    SettingPath = os.environ['localAppData'.upper()] + '/../Roaming/' + PathName + '/Settings/Settings.json'
+    @staticmethod
+    def GetSettingPath(PathName:str, isPortableMode:bool = False):
+        mode = 'Roaming' if isPortableMode else 'Local'
+        return os.environ['localAppData'.upper()] + '/../' + mode +'/' + PathName + '/Settings/Settings.json'
 
     @staticmethod
     def GetAPIName(api:API):
         return Launcher.Name + '.' + api.name
+    
+    Name = 'Flow.Launcher' # or: 'Wox'
+    PathName = 'FlowLauncher' # or: 'Wox'
+
+    SettingPath = GetSettingPath(PathName)
+    if not os.path.isfile(SettingPath):
+        SettingPath = GetSettingPath(PathName, True)
+
 
 class Query(Launcher):
 # class Query():
