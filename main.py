@@ -2,8 +2,8 @@
 # Author: wayneferdon wayneferdon@hotmail.com
 # Date: 2022-02-12 06:25:53
 # LastEditors: WayneFerdon wayneferdon@hotmail.com
-# LastEditTime: 2023-03-04 13:23:24
-# FilePath: \Flow.Launcher.Plugin.ChromeHistory\main.py
+# LastEditTime: 2023-04-03 01:19:06
+# FilePath: \Wox.Base.Plugin.ChromeHistory\main.py
 # ----------------------------------------------------------------
 # Copyright (c) 2022 by Wayne Ferdon Studio. All rights reserved.
 # Licensed to the .NET Foundation under one or more agreements.
@@ -12,19 +12,22 @@
 # ----------------------------------------------------------------
 
 # -*- coding: utf-8 -*-
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from WoxPluginBase_ChromeQuery import *
+
 from TimeStamp import *
-from ChromeQuery import *
 
 class GetHistory(ChromeQuery):
     def _getDatas_(self):
-        return Cache.getHistories()
+        return ChromeCache.getHistories()
 
     def _getResult_(self, regex:RegexList, data:History):
-        item = data.url + ';' + data.title + ';' + stamp2time(data.lastVisitTime, 'toMicroSec')
+        item = f'{data.platform.name};{data.title};{stamp2time(data.lastVisitTime, "toMicroSec")};{data.url}/'
         if not regex.match(item):
             return
         subTitle = '[{time}] {url}'.format(time=stamp2time(data.lastVisitTime, 'toSec'), url=data.url)
-        return QueryResult(data.title,subTitle,data.icon,self._datas_.index(data),self._openUrl_.__name__,True,data.url).toDict()
+        return QueryResult(data.platform.name + ' ' + data.title,subTitle,data.icon,self._datas_.index(data),self._openUrl_.__name__,True,data.url).toDict()
 
     def _extraContextMenu_(self, data: History):
         lastVisitTime = stamp2time(data.lastVisitTime, 'toMicroSec')
