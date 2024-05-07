@@ -14,7 +14,7 @@
 # -*- coding: utf-8 -*-
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from WoxPluginBase_ChromeQuery import *
+from WoxBasePluginChromeQuery import *
 
 from TimeStamp import *
 
